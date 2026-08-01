@@ -62,7 +62,18 @@ public class RuleAtom extends Atom {
         this.r = raise;
     }
 
+    private static final float MAX_LENGTH = 4096f;
+
     public Box createBox(TeXEnvironment env) {
-        return new HorizontalRule(h * SpaceAtom.getFactor(hunit, env), w * SpaceAtom.getFactor(wunit, env), r * SpaceAtom.getFactor(runit, env));
+        float width = w * SpaceAtom.getFactor(wunit, env);
+        float height = h * SpaceAtom.getFactor(hunit, env);
+        float raise = r * SpaceAtom.getFactor(runit, env);
+        if (!Float.isFinite(width) || width > MAX_LENGTH) {
+            width = MAX_LENGTH;
+        }
+        if (!Float.isFinite(height) || height > MAX_LENGTH) {
+            height = MAX_LENGTH;
+        }
+        return new HorizontalRule(height, width, raise);
     }
 }
