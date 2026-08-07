@@ -123,6 +123,15 @@ public class TeXParser {
 
     protected static boolean isLoading = false;
 
+    private static final int MAX_PARSE_DEPTH = 64;
+    private static int parseDepth = 0;
+
+    private static final int MAX_FIRSTPASS_EXPANSIONS = 10000;
+    private static final int MAX_FIRSTPASS_LENGTH = 64 * 1024;
+    private static final long MAX_FIRSTPASS_WORK = 32 * 1024 * 1024;
+    private static long firstpassExpansionWork = 0;
+    private static final int MAX_LASTPASS_EXPANSIONS = 10000;
+    private static int lastpassExpansions = 0;
     private static final Set<String> unparsedContents = new HashSet<String>(6);
     static {
         unparsedContents.add("jlmDynamic");
@@ -395,13 +404,20 @@ public class TeXParser {
     }
 
     private void firstpass() throws ParseException {
+        NewCommandMacro.reset();
+        lastpassExpansions = 0;
         if (len != 0) {
             char ch;
             String com;
             int spos;
             String[] args;
             MacroInfo mac;
+            int expansions = 0;
+            firstpassExpansionWork = 0;
             while (pos < len) {
+                if (parseString.length() > MAX_FIRSTPASS_LENGTH) {
+                    throw new ParseException("Formula too large after macro expansion");
+                }
                 ch = parseString.charAt(pos);
                 switch (ch) {
                 case ESCAPE :
@@ -421,6 +437,13 @@ public class TeXParser {
                         len = parseString.length();
                         pos = spos;
                     } else if (NewCommandMacro.isMacro(com)) {
+                        if (++expansions > MAX_FIRSTPASS_EXPANSIONS) {
+                            throw new ParseException("Macro expansion limit exceeded");
+                        }
+                        firstpassExpansionWork += len;
+                        if (firstpassExpansionWork > MAX_FIRSTPASS_WORK) {
+                            throw new ParseException("Formula expands too much");
+                        }
                         mac = MacroInfo.Commands.get(com);
                         args = getOptsArgs(mac.nbArgs, mac.hasOptions ? 1 : 0);
                         args[0] = com;
@@ -443,6 +466,13 @@ public class TeXParser {
                                 throw new ParseException("Unknown environment: " + args[1] + " at position " + getLine() + ":" + getCol());
                             }
                         } else {
+                            if (++expansions > MAX_FIRSTPASS_EXPANSIONS) {
+                                throw new ParseException("Macro expansion limit exceeded");
+                            }
+                            firstpassExpansionWork += len;
+                            if (firstpassExpansionWork > MAX_FIRSTPASS_WORK) {
+                                throw new ParseException("Formula expands too much");
+                            }
                             try {
                                 String[] optarg = getOptsArgs(mac.nbArgs - 1, 0);
                                 String grp = getGroup("\\begin{" + args[1] + "}", "\\end{" + args[1] + "}");
@@ -656,6 +686,11 @@ public class TeXParser {
      * @throws ParseException if an error is encountered during parsing
      */
     public void parse() throws ParseException {
+        if (++parseDepth > MAX_PARSE_DEPTH) {
+            --parseDepth;
+            throw new DepthLimitExceededException();
+        }
+        try {
         if (len != 0) {
             char ch;
             while (pos < len) {
@@ -780,6 +815,9 @@ public class TeXParser {
 
         if (formula.root == null && !arrayMode) {
             formula.add(new EmptyAtom());
+        }
+        } finally {
+            --parseDepth;
         }
     }
 
@@ -1258,9 +1296,13 @@ public class TeXParser {
      * @param opts must be 1 if the options are found before the first argument and must be 2 if they must be found before the second argument
      * @return an array containing arguments and at the end the options are put
      */
+    private static final int MAX_MACRO_ARGS = 256;
+
     /* Should be improved */
     public String[] getOptsArgs(int nbArgs, int opts) {
         //A maximum of 10 options can be passed to a command
+        if (nbArgs < 0 || nbArgs > MAX_MACRO_ARGS)
+            nbArgs = MAX_MACRO_ARGS;
         String[] args = new String[nbArgs + 10 + 1];
         if (nbArgs != 0) {
 
@@ -1379,6 +1421,9 @@ public class TeXParser {
         args[0] = command;
 
         if (NewCommandMacro.isMacro(command)) {
+            if (++lastpassExpansions > MAX_LASTPASS_EXPANSIONS) {
+                throw new ParseException("Macro expansion limit exceeded");
+            }
             String ret = (String) mac.invoke(this, args);
             insert(spos, pos, ret);
             return null;

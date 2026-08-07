@@ -192,14 +192,15 @@ public class TeXIcon implements Icon {
      * Get the total height of the TeXIcon. This also includes the insets.
      */
     public int getIconHeight() {
-        return ((int) ((box.getHeight()) * size + 0.99 + insets.top)) +  ((int) ((box.getDepth()) * size + 0.99 + insets.bottom));
+        int total = ((int) ((box.getHeight()) * size + 0.99 + insets.top)) +  ((int) ((box.getDepth()) * size + 0.99 + insets.bottom));
+        return sanitizePx(total);
     }
 
     /**
      * Get the total height of the TeXIcon. This also includes the insets.
      */
     public int getIconDepth() {
-        return (int) (box.getDepth() * size + 0.99 + insets.bottom);
+        return sanitizePx((int) (box.getDepth() * size + 0.99 + insets.bottom));
     }
 
     /**
@@ -207,7 +208,15 @@ public class TeXIcon implements Icon {
      */
 
     public int getIconWidth() {
-        return (int) (box.getWidth() * size + 0.99 + insets.left + insets.right);
+        return sanitizePx((int) (box.getWidth() * size + 0.99 + insets.left + insets.right));
+    }
+
+    private static final int MAX_PIXELS = 4096;
+
+    private static int sanitizePx(int px) {
+        if (px < 0 || px > MAX_PIXELS)
+            return MAX_PIXELS;
+        return px;
     }
 
     public float getTrueIconHeight() {

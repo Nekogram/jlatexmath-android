@@ -99,16 +99,15 @@ public class LongdivAtom extends VRowAtom {
         long q = dividend / divisor;
         vec.add(Long.toString(q));
         vec.add(Long.toString(dividend));
-
-        while (q != 0) {
-            final double p = (double) Math.floor(Math.log10((double) q));
-            final double p10 = Math.pow(10., p);
-            final long d = (long) (Math.floor(((double) q) / p10) * p10);
-            final long dd = d * divisor;
+        long remaining = dividend;
+        String x = Long.toString(q);
+        int xlen = x.length();
+        for (int i = 0; i < xlen; i++) {
+            long b = (x.charAt(i) - '0') * (long) Math.pow(10, xlen - i - 1);
+            long dd = b * divisor;
+            remaining -= dd;
             vec.add(Long.toString(dd));
-            dividend -= dd;
-            vec.add(Long.toString(dividend));
-            q -= d;
+            vec.add(Long.toString(remaining));
         }
 
         String[] res = new String[vec.size()];

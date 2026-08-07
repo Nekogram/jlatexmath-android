@@ -77,6 +77,10 @@ public class TeXEnvironment {
     private int interlineUnit;
     private float interline;
 
+    private int depth;
+
+    private static final int MAX_DEPTH = 64;
+
     public boolean isColored = false;
 
     public TeXEnvironment(int style, TeXFont tf) {
@@ -97,11 +101,16 @@ public class TeXEnvironment {
     }
 
     private TeXEnvironment(int style, float scaleFactor, TeXFont tf, Color bg, Color c, String textStyle, boolean smallCap) {
+        this(style, scaleFactor, tf, bg, c, textStyle, smallCap, 0);
+    }
+
+    private TeXEnvironment(int style, float scaleFactor, TeXFont tf, Color bg, Color c, String textStyle, boolean smallCap, int depth) {
         this.style = style;
         this.scaleFactor = scaleFactor;
         this.tf = tf;
         this.textStyle = textStyle;
         this.smallCap = smallCap;
+        this.depth = depth;
         background = bg;
         color = c;
         setInterline(TeXConstants.UNIT_EX, 1f);
@@ -133,11 +142,17 @@ public class TeXEnvironment {
     }
 
     protected TeXEnvironment copy() {
-        return new TeXEnvironment(style, scaleFactor, tf, background, color, textStyle, smallCap);
+        if (depth > MAX_DEPTH) {
+            throw new DepthLimitExceededException();
+        }
+        return new TeXEnvironment(style, scaleFactor, tf, background, color, textStyle, smallCap, depth + 1);
     }
 
     protected TeXEnvironment copy(TeXFont tf) {
-        TeXEnvironment te = new TeXEnvironment(style, scaleFactor, tf, background, color, textStyle, smallCap);
+        if (depth > MAX_DEPTH) {
+            throw new DepthLimitExceededException();
+        }
+        TeXEnvironment te = new TeXEnvironment(style, scaleFactor, tf, background, color, textStyle, smallCap, depth + 1);
         te.textwidth = textwidth;
         te.interline = interline;
         te.interlineUnit = interlineUnit;

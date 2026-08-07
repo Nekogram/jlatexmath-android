@@ -162,7 +162,11 @@ public class MatrixAtom extends Atom {
         TeXFormula tf;
         TeXParser tp;
         List<Integer> lposition = new ArrayList<Integer>();
+        int steps = 0;
         while (pos < len) {
+            if (++steps > 100000 || len > 10000) {
+                throw new ParseException("Column specification is too complex");
+            }
             ch = opt.charAt(pos);
             switch (ch) {
             case 'l' :
@@ -208,11 +212,13 @@ public class MatrixAtom extends Atom {
                 String[] args = tp.getOptsArgs(2, 0);
                 pos += tp.getPos();
                 int nrep =  Integer.parseInt(args[1]);
-                String str = "";
+                if (nrep < 0 || nrep > 4096)
+                    nrep = 4096;
+                StringBuilder sb = new StringBuilder(nrep * args[2].length());
                 for (int j = 0; j < nrep; j++) {
-                    str += args[2];
+                    sb.append(args[2]);
                 }
-                opt.insert(pos, str);
+                opt.insert(pos, sb.toString());
                 len = opt.length();
                 pos--;
                 break;

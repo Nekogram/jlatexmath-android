@@ -67,11 +67,17 @@ public class HdotsforAtom extends MulticolumnAtom {
         Box b;
         if (w != 0) {
             float dw = db.getWidth();
+            float target = w;
+            if (dw <= 0 || !Float.isFinite(dw) || target > 65536f)
+                target = 0f;
             b = new HorizontalBox(db);
-            while (b.getWidth() < w) {
+            int guard = 0;
+            while (b.getWidth() < target && guard++ < 65536) {
                 b.add(db);
             }
-            b = new HorizontalBox(b, w, TeXConstants.ALIGN_CENTER);
+            if (target != 0f) {
+                b = new HorizontalBox(b, target, TeXConstants.ALIGN_CENTER);
+            }
         } else {
             b = db;
         }

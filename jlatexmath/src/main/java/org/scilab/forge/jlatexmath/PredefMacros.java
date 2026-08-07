@@ -122,6 +122,8 @@ public class PredefMacros {
 
     public static final Atom fcscore_macro(final TeXParser tp, final String[] args) throws ParseException {
         int n = Integer.parseInt(args[1]);
+        if (n > 4096)
+            n = 4096;
         if (n > 5) {
             final int q = n / 5;
             final int r = n % 5;
@@ -141,6 +143,13 @@ public class PredefMacros {
         try {
             long dividend = Long.valueOf(args[1]);
             long divisor = Long.valueOf(args[2]);
+            if (divisor == 0) {
+                throw new ParseException("Divisor must not be 0");
+            }
+            if (dividend > 1000000000L || dividend < -1000000000L
+                    || divisor > 1000000000L || divisor < -1000000000L) {
+                throw new ParseException("Operands are too large for longdiv");
+            }
             return new LongdivAtom(divisor, dividend);
         } catch (NumberFormatException e) {
             throw new ParseException("Divisor and dividend must be integer numbers");
@@ -827,6 +836,8 @@ public class PredefMacros {
 
     public static final Atom multicolumn_macro(final TeXParser tp, final String[] args) throws ParseException {
         int n = Integer.parseInt(args[1]);
+        if (n > 4096)
+            n = 4096;
         tp.addAtom(new MulticolumnAtom(n, args[2], new TeXFormula(tp, args[3]).root));
         ((ArrayOfAtoms)tp.formula).addCol(n);
         return null;
@@ -834,6 +845,10 @@ public class PredefMacros {
 
     public static final Atom hdotsfor_macro(final TeXParser tp, final String[] args) throws ParseException {
         int n = Integer.parseInt(args[1]);
+        if (n < 1)
+            n = 1;
+        else if (n > 4096)
+            n = 4096;
         float f = 1;
         if (args[2] != null) {
             f = Float.parseFloat(args[2]);
@@ -1700,6 +1715,8 @@ public class PredefMacros {
         String[] letters = { "M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
         String roman = "";
         int num = Integer.parseInt(args[1].trim());
+        if (num > 4000000)
+            num = 4000000;
         for (int i = 0; i < numbers.length; i++) {
             while (num >= numbers[i]) {
                 roman += letters[i];

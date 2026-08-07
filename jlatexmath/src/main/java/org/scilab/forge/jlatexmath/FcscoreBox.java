@@ -62,6 +62,10 @@ public class FcscoreBox extends Box {
     private float thickness;
 
     public FcscoreBox(int N, float h, float thickness, float space, boolean strike) {
+        if (N < 0)
+            N = 0;
+        else if (N > 4096)
+            N = 4096;
         this.N = N;
         this.width = N * (thickness + space) + 2 * space;
         this.height = h;

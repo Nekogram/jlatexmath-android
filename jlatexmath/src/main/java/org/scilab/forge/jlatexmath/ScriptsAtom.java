@@ -53,6 +53,9 @@ package org.scilab.forge.jlatexmath;
  */
 public class ScriptsAtom extends Atom {
 
+    private static final int MAX_WRAP_DEPTH = 64;
+    private static int boxWrapDepth = 0;
+
     // TeX constant: what's the use???
     private final static SpaceAtom SCRIPT_SPACE = new SpaceAtom(TeXConstants.UNIT_POINT, 0.5f, 0, 0);
 
@@ -63,11 +66,16 @@ public class ScriptsAtom extends Atom {
     private final Atom subscript;
     private final Atom superscript;
     private int align = TeXConstants.ALIGN_LEFT;
+    private final int wrapDepth;
 
     public ScriptsAtom(Atom base, Atom sub, Atom sup) {
         this.base = base;
         subscript = sub;
         superscript = sup;
+        wrapDepth = (base instanceof ScriptsAtom ? ((ScriptsAtom) base).wrapDepth + 1 : 1);
+        if (wrapDepth > MAX_WRAP_DEPTH) {
+            throw new DepthLimitExceededException();
+        }
     }
 
     public ScriptsAtom(Atom base, Atom sub, Atom sup, boolean left) {
@@ -77,6 +85,11 @@ public class ScriptsAtom extends Atom {
     }
 
     public Box createBox(TeXEnvironment env) {
+        if (++boxWrapDepth > MAX_WRAP_DEPTH) {
+            --boxWrapDepth;
+            throw new DepthLimitExceededException();
+        }
+        try {
         Box b = (base == null ? new StrutBox(0, 0, 0, 0) : base.createBox(env));
         Box deltaSymbol = new StrutBox(0, 0, 0, 0);
         if (subscript == null && superscript == null)
@@ -216,6 +229,9 @@ public class ScriptsAtom extends Atom {
 
                 return hor;
             }
+        }
+        } finally {
+            --boxWrapDepth;
         }
     }
 

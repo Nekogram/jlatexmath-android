@@ -124,12 +124,26 @@ public abstract class Box {
     protected Box elderParent;
     protected Color markForDEBUG;
 
+    private static final int MAX_BOX_BUDGET = 100000;
+    private static int boxBudgetUsed = 0;
+
+    public static void resetBoxBudget() {
+        boxBudgetUsed = 0;
+    }
+
+    private static void countBoxAllocation() {
+        if (++boxBudgetUsed > MAX_BOX_BUDGET) {
+            throw new ParseException("Formula is too large to lay out!");
+        }
+    }
+
     /**
      * Inserts the given box at the end of the list of child boxes.
      *
      * @param b the box to be inserted
      */
     public void add(Box b) {
+        countBoxAllocation();
         children.add(b);
         b.parent = this;
         b.elderParent = elderParent;
@@ -142,6 +156,7 @@ public abstract class Box {
      * @param b the box to be inserted
      */
     public void add(int pos, Box b) {
+        countBoxAllocation();
         children.add(pos, b);
         b.parent = this;
         b.elderParent = elderParent;
@@ -163,6 +178,7 @@ public abstract class Box {
      * @param bg the background color
      */
     protected Box(Color fg, Color bg) {
+        countBoxAllocation();
         foreground = fg;
         background = bg;
     }

@@ -83,7 +83,12 @@ public class DelimiterFactory {
      * @return the box representing the delimiter variant that fits best according to
      * 			the required minimum size.
      */
+    private static final float MAX_LENGTH = 4096f;
+
     public static Box create(String symbol, TeXEnvironment env, float minHeight) {
+        if (!Float.isFinite(minHeight) || minHeight < 0)
+            minHeight = 0f;
+        minHeight = Math.min(minHeight, MAX_LENGTH);
         TeXFont tf = env.getTeXFont();
         int style = env.getStyle();
         Char c = tf.getChar(symbol, style);

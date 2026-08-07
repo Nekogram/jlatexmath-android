@@ -65,6 +65,10 @@ public class ArrayOfAtoms extends TeXFormula {
     }
 
     public void addCol(int n) {
+        if (n < 1)
+            n = 1;
+        else if (n > 4096)
+            n = 4096;
         array.get(row).add(root);
         for (int i = 1; i < n - 1; i++) {
             array.get(row).add(null);

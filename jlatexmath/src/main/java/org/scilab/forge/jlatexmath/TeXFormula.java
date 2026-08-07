@@ -736,11 +736,11 @@ public class TeXFormula {
          * @return the TeXIcon
          */
         public TeXIcon build() {
+            Box.resetBoxBudget();
             if (style == null) {
                 throw new IllegalStateException("A style is required. Use setStyle()");
             }
-            if (size == null) {
-                throw new IllegalStateException("A size is required. Use setStyle()");
+            if (size == null) {                throw new IllegalStateException("A size is required. Use setStyle()");
             }
             DefaultTeXFont font = (type == null) ? new DefaultTeXFont(size) : createFont(size, type);
             TeXEnvironment te;
