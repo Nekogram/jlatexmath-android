@@ -973,7 +973,10 @@ public class PredefMacros {
         return at;
     }
 
+    private static boolean DISABLE_NEWCOMMAND = true;
+
     public static final Atom newcommand_macro(final TeXParser tp, final String[] args) throws ParseException {
+        if (DISABLE_NEWCOMMAND) return null;
         String newcom = args[1];
         Integer nbArgs;
         if (!tp.isValidName(newcom)) {
@@ -998,6 +1001,7 @@ public class PredefMacros {
     }
 
     public static final Atom renewcommand_macro(final TeXParser tp, final String[] args) throws ParseException {
+        if (DISABLE_NEWCOMMAND) return null;
         String newcom = args[1];
         Integer nbArgs;
         if (!tp.isValidName(newcom)) {
@@ -1028,6 +1032,7 @@ public class PredefMacros {
     }
 
     public static final Atom newenvironment_macro(final TeXParser tp, final String[] args) throws ParseException {
+        if (DISABLE_NEWCOMMAND) return null;
         Integer opt = args[4] == null ? 0 : Integer.parseInt(args[4]);
         if (opt == null)
             throw new ParseException("The optional argument should be an integer !");
@@ -1037,6 +1042,7 @@ public class PredefMacros {
     }
 
     public static final Atom renewenvironment_macro(final TeXParser tp, final String[] args) throws ParseException {
+        if (DISABLE_NEWCOMMAND) return null;
         Integer opt = args[4] == null ? 0 : Integer.parseInt(args[4]);
         if (opt == null)
             throw new ParseException("The optional argument should be an integer !");
