@@ -128,6 +128,7 @@ public class AndroidGraphics2D implements Graphics2D {
 
     @Override
     public void drawChars(char chars[], int offset, int length, int x, int y) {
+        paint.setStyle(Paint.Style.FILL);
         if (font != null) {
             paint.setTypeface(font.typeface());
             paint.setTextSize(font.size());

@@ -404,7 +404,6 @@ public class TeXParser {
     }
 
     private void firstpass() throws ParseException {
-        NewCommandMacro.reset();
         lastpassExpansions = 0;
         if (len != 0) {
             char ch;
