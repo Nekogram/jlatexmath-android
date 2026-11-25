@@ -124,7 +124,23 @@ public class TeXParser {
     protected static boolean isLoading = false;
 
     private static final int MAX_PARSE_DEPTH = 64;
-    private static int parseDepth = 0;
+    // Characters handed to parse() across all nested parsers of one top-level
+    // formula. Macros such as \sideset parse an argument more than once, so
+    // nesting them makes the work grow exponentially with no deep recursion.
+    private static final long MAX_PARSE_WORK = 2 * 1024 * 1024;
+
+    private static final class ParseState {
+        int depth;
+        long work;
+    }
+
+    // Per thread: formulas are rendered on several threads at once.
+    private static final ThreadLocal<ParseState> parseState = new ThreadLocal<ParseState>() {
+        @Override
+        protected ParseState initialValue() {
+            return new ParseState();
+        }
+    };
 
     private static final int MAX_FIRSTPASS_EXPANSIONS = 10000;
     private static final int MAX_FIRSTPASS_LENGTH = 64 * 1024;
@@ -686,10 +702,18 @@ public class TeXParser {
      * @throws ParseException if an error is encountered during parsing
      */
     public void parse() throws ParseException {
-        if (++parseDepth > MAX_PARSE_DEPTH) {
-            --parseDepth;
+        final ParseState state = parseState.get();
+        if (state.depth == 0) {
+            state.work = 0;
+        }
+        if (state.depth >= MAX_PARSE_DEPTH) {
             throw new DepthLimitExceededException();
         }
+        state.work += len + 1;
+        if (state.work > MAX_PARSE_WORK) {
+            throw new ParseException("Formula is too complex to parse");
+        }
+        ++state.depth;
         try {
         if (len != 0) {
             char ch;
@@ -817,7 +841,7 @@ public class TeXParser {
             formula.add(new EmptyAtom());
         }
         } finally {
-            --parseDepth;
+            --state.depth;
         }
     }
 
